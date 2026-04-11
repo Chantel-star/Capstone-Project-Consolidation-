@@ -1,0 +1,70 @@
+# News Application (Django Capstone Project)
+
+## Overview
+
+This is a Django-based News Application that allows readers to view articles published by journalists and publishers. The system includes role-based access control, article approval workflows, and a RESTful API for external integration.
+
+Users are assigned roles (Reader, Editor, Journalist), and permissions are managed using Django’s authentication system and custom user model.
+
+---
+
+## Features
+
+### User Roles
+
+- **Reader**
+
+  - Can view approved articles
+  - Subscribes to publishers and journalists
+
+- **Editor**
+  - Reviews articles
+  - Approves or rejects articles
+
+- **Journalist**
+  - Creates articles
+  - Updates own articles
+  - Submits articles for approval
+
+---
+
+### Article System
+
+- Create articles (Journalists only)
+- Edit articles
+- Editor approval system
+- Only approved articles are visible to readers
+
+---
+
+### Authentication & Permissions
+
+- Custom User model (`AUTH_USER_MODEL`)
+- Role-based access control
+- Group-based permissions (Reader, Editor, Journalist)
+
+---
+
+### REST API
+
+Endpoint:
+Returns articles based on:
+
+- User subscriptions (publishers & journalists)
+- Approved status
+
+---
+
+### Testing
+
+Automated unit tests implemented using Django TestCase:
+
+- API authentication tests
+- Subscription filtering tests
+- Data integrity tests
+
+Run tests:
+
+```bash
+
+python manage.py test
