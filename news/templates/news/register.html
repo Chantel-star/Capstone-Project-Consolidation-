@@ -1,12 +1,17 @@
-{% extends 'news/base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
 
-{% block content %}
-<h2>Register</h2>
+<h2>Create Account</h2>
 
-<form method="post">
+<form method="POST">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Register</button>
 </form>
 
-{% endblock %}
+</body>
+</html>
