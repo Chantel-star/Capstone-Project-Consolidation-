@@ -1,6 +1,18 @@
-{% extends 'news/base.html' %}
+<h2>Articles</h2>
+{% for article in articles %}
+    <div>
+        <h3>{{ article.title }}</h3>
+        <p>{{ article.content }}</p>
+        <p>Author: {{ article.author }}</p>
+        <p>Publisher: {{ article.publisher }}</p>
+    </div>
+{% endfor %}
 
-{% block content %}
-<h2>Welcome to the News Platform</h2>
-<p>Read the latest approved articles.</p>
-{% endblock %}
+<h2>Newsletters</h2>
+{% for newsletter in newsletters %}
+    <div>
+        <h3>{{ newsletter.title }}</h3>
+        <p>{{ newsletter.content }}</p>
+        <p>Publisher: {{ newsletter.publisher }}</p>
+    </div>
+{% endfor %}

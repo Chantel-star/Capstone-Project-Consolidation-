@@ -5,7 +5,12 @@ from .models import CustomUser, Article
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
-    role = forms.ChoiceField(choices=CustomUser.ROLE_CHOICES)
+    role = forms.ChoiceField(choices=[
+    ('admin', 'Admin'),
+    ('publisher', 'Publisher'),
+    ('journalist', 'Journalist'),
+    ('subscriber', 'Subscriber'),
+])
 
     class Meta:
         model = CustomUser

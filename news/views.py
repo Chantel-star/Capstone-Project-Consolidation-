@@ -4,12 +4,14 @@ from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.models import Group
+from django.core.mail import send_mail
+import requests
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Article, PublisherSubscription, JournalistSubscription
+from .models import Article, Newsletter, CustomUser, Publisher
 from .forms import ArticleForm, RegisterForm
 from .serializers import ArticleSerializer
 
@@ -17,23 +19,23 @@ from .serializers import ArticleSerializer
 # =========================
 # ROLE CHECKS
 # =========================
-def is_reader(user):
-    return user.is_authenticated and user.role == 'reader'
+def is_subscriber(user):
+    return user.is_authenticated and user.role == 'subscriber'
 
 
 def is_journalist(user):
     return user.is_authenticated and user.role == 'journalist'
 
 
-def is_editor(user):
-    return user.is_authenticated and user.role == 'editor'
+def is_publisher(user):
+    return user.is_authenticated and user.role == 'publisher'
 
 
 # =========================
 # CREATE GROUPS
 # =========================
 def create_groups():
-    groups = ['Reader', 'Editor', 'Journalist']
+    groups = ['Subscriber', 'Journalist', 'Publisher']
     for group in groups:
         Group.objects.get_or_create(name=group)
 
@@ -43,21 +45,31 @@ def create_groups():
 # =========================
 def home(request):
     articles = Article.objects.filter(approved=True)
-    return render(request, 'news/home.html', {'articles': articles})
+    newsletters = Newsletter.objects.none()
+
+    if request.user.is_authenticated:
+        newsletters = Newsletter.objects.filter(
+            publisher__in=request.user.subscribed_publishers.all()
+        )
+
+    return render(request, 'news/home.html', {
+        'articles': articles,
+        'newsletters': newsletters
+    })
 
 
 # =========================
-# EDITOR DASHBOARD
+# DASHBOARD (PUBLISHER)
 # =========================
 @login_required
-@user_passes_test(is_editor)
+@user_passes_test(is_publisher)
 def editor_dashboard(request):
     articles = Article.objects.filter(approved=False)
     return render(request, 'news/editor_dashboard.html', {'articles': articles})
 
 
 # =========================
-# CREATE ARTICLE (JOURNALIST)
+# CREATE ARTICLE
 # =========================
 @login_required
 @user_passes_test(is_journalist)
@@ -68,10 +80,15 @@ def create_article(request):
         if form.is_valid():
             article = form.save(commit=False)
             article.author = request.user
+
+            # assign publisher manually (IMPORTANT)
+            publisher = Publisher.objects.first()
+            article.publisher = publisher
+
             article.approved = False
             article.save()
-            return redirect('home')
 
+            return redirect('home')
     else:
         form = ArticleForm()
 
@@ -79,34 +96,40 @@ def create_article(request):
 
 
 # =========================
-# APPROVE ARTICLE (EDITOR)
+# APPROVE ARTICLE
 # =========================
 @login_required
-@user_passes_test(is_editor)
+@user_passes_test(is_publisher)
 def approve_article(request, article_id):
     article = get_object_or_404(Article, id=article_id)
 
-    # Approve article
     article.approved = True
     article.save()
 
-    # Get subscribers
-    publisher_subscribers = PublisherSubscription.objects.filter(
-        publisher=article.publisher
-    ).values_list('user', flat=True)
+    # get subscribers of THIS publisher
+    subscribers = CustomUser.objects.filter(
+        subscribed_publishers=article.publisher
+    ).values_list('email', flat=True)
 
-    journalist_subscribers = JournalistSubscription.objects.filter(
-        journalist=article.author
-    ).values_list('user', flat=True)
+    send_mail(
+        subject="New Article Published",
+        message=f"{article.title} is now live!",
+        from_email="admin@newsapp.com",
+        recipient_list=list(subscribers),
+        fail_silently=True,
+    )
 
-    # Combine subscribers
-    subscribers = set(publisher_subscribers) | set(journalist_subscribers)
+    # X API (safe)
+    try:
+        requests.post(
+            "https://api.twitter.com/2/tweets",
+            headers={"Authorization": "Bearer YOUR_ACCESS_TOKEN"},
+            json={"text": f"New article: {article.title}"}
+        )
+    except Exception:
+        pass
 
-    # Simulate notification
-    for user_id in subscribers:
-        print(f"Notify user {user_id}: New article '{article.title}'")
-
-    messages.info(request, "Notifications sent to subscribers.")
+    messages.success(request, "Article approved.")
     return redirect('editor_dashboard')
 
 
@@ -117,19 +140,17 @@ def approve_article(request, article_id):
 def update_article(request, article_id):
     article = get_object_or_404(Article, id=article_id)
 
-    if request.user != article.author and request.user.role != 'editor':
+    if request.user != article.author and request.user.role != 'publisher':
         return redirect('home')
 
     if request.method == 'POST':
         form = ArticleForm(request.POST, instance=article)
 
         if form.is_valid():
-            updated_article = form.save(commit=False)
-            updated_article.author = article.author
-            updated_article.approved = False
-            updated_article.save()
+            updated = form.save(commit=False)
+            updated.approved = False
+            updated.save()
             return redirect('home')
-
     else:
         form = ArticleForm(instance=article)
 
@@ -149,13 +170,12 @@ def register(request):
 
         if form.is_valid():
             user = form.save(commit=False)
-            role = form.cleaned_data['role']
-
-            user.role = role
+            user.role = form.cleaned_data['role']
             user.save()
 
-            group = Group.objects.get(name=role.capitalize())
-            user.groups.add(group)
+            group = Group.objects.filter(name=user.role.capitalize()).first()
+            if group:
+                user.groups.add(group)
 
             login(request, user)
             return redirect('home')
@@ -164,26 +184,19 @@ def register(request):
 
 
 # =========================
-# API: SUBSCRIBED ARTICLES
+# API VIEW
 # =========================
 class ArticleAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-
         articles = Article.objects.filter(approved=True)
 
-        # If reader → apply subscription filtering
-        if user.role == 'reader':
+        user = request.user
 
-            publisher_ids = PublisherSubscription.objects.filter(
-                user=user
-            ).values_list('publisher_id', flat=True)
-
-            journalist_ids = JournalistSubscription.objects.filter(
-                user=user
-            ).values_list('journalist_id', flat=True)
+        if user.role == 'subscriber':
+            publisher_ids = user.subscribed_publishers.values_list('id', flat=True)
+            journalist_ids = user.subscribed_journalists.values_list('id', flat=True)
 
             articles = articles.filter(
                 Q(publisher_id__in=publisher_ids) |
@@ -192,3 +205,52 @@ class ArticleAPIView(APIView):
 
         serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data)
+
+
+# =========================
+# CREATE NEWSLETTER
+# =========================
+@login_required
+def create_newsletter(request):
+    if request.user.role not in ['journalist', 'publisher']:
+        return redirect('home')
+
+    if request.method == 'POST':
+        publisher = Publisher.objects.first()  # simple safe default
+
+        Newsletter.objects.create(
+            title=request.POST['title'],
+            content=request.POST['content'],
+            publisher=publisher
+        )
+        return redirect('home')
+
+    return render(request, 'news/create_newsletter.html')
+
+
+# =========================
+# SUBSCRIPTIONS
+# =========================
+@login_required
+def manage_subscriptions(request):
+    publishers = Publisher.objects.all()
+    journalists = CustomUser.objects.filter(role='journalist')
+
+    if request.method == 'POST':
+        request.user.subscribed_publishers.set(
+            Publisher.objects.filter(id__in=request.POST.getlist('publishers'))
+        )
+
+        request.user.subscribed_journalists.set(
+            CustomUser.objects.filter(
+                id__in=request.POST.getlist('journalists'),
+                role='journalist'
+            )
+        )
+
+        return redirect('home')
+
+    return render(request, 'news/subscriptions.html', {
+        'publishers': publishers,
+        'journalists': journalists
+    })
