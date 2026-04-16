@@ -12,7 +12,7 @@
 
         {% if user.is_authenticated %}
             <a href="/create/">Create Article</a> |
-            {% if user.role == 'editor' %}
+            {% if user.role == 'publisher' %}
                 <a href="/editor/">Editor Dashboard</a> |
             {% endif %}
 

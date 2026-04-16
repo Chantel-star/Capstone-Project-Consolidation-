@@ -79,11 +79,7 @@ WSGI_APPLICATION = 'news_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'MariaDB',
-        'USER': 'root',
-        'PASSWORD': 'your_password',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
-from .models import Article, Publisher, PublisherSubscription
+from .models import Publisher, Article
 
 User = get_user_model()
 
@@ -39,10 +39,7 @@ class ArticleAPITest(TestCase):
         )
 
         # Subscribe reader to publisher
-        PublisherSubscription.objects.create(
-            user=self.reader,
-            publisher=self.publisher
-        )
+        self.reader.subscribed_publishers.add(self.publisher)
 
     # -------------------------
     # TEST 1: API AUTH REQUIRED

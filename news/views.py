@@ -76,24 +76,13 @@ def editor_dashboard(request):
 def create_article(request):
     if request.method == 'POST':
         form = ArticleForm(request.POST)
-
         if form.is_valid():
-            article = form.save(commit=False)
-            article.author = request.user
-
-            # assign publisher manually (IMPORTANT)
-            publisher = Publisher.objects.first()
-            article.publisher = publisher
-
-            article.approved = False
-            article.save()
-
+            form.save()
             return redirect('home')
     else:
         form = ArticleForm()
 
     return render(request, 'news/create_article.html', {'form': form})
-
 
 # =========================
 # APPROVE ARTICLE
