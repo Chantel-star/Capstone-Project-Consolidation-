@@ -6,11 +6,16 @@ from django.contrib.auth.models import AbstractUser
 # ROLE CHOICES
 # =========================
 ROLE_CHOICES = [
-    ('reader', 'Reader'),
-    ('journalist', 'Journalist'),
-    ('publisher', 'Publisher'),
+    ("reader", "Reader"),
+    ("journalist", "Journalist"),
+    ("publisher", "Publisher"),
 ]
 
+role = models.CharField(
+    max_length=20,
+    choices=ROLE_CHOICES,
+    default="reader",
+)
 
 # =========================
 # CUSTOM USER MODEL

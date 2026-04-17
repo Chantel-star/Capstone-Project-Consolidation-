@@ -1,18 +1,40 @@
-<h2>Articles</h2>
-{% for article in articles %}
-    <div>
-        <h3>{{ article.title }}</h3>
-        <p>{{ article.content }}</p>
-        <p>Author: {{ article.author }}</p>
-        <p>Publisher: {{ article.publisher }}</p>
-    </div>
-{% endfor %}
+{% extends 'news/base.html' %}
+
+{% block content %}
+<h1>Home</h1>
+
+<h2>Approved Articles</h2>
+{% if articles %}
+    {% for article in articles %}
+        <div>
+            <h3>{{ article.title }}</h3>
+            <p>{{ article.content }}</p>
+            <p><strong>Author:</strong> {{ article.author }}</p>
+            <p><strong>Publisher:</strong> {{ article.publisher }}</p>
+
+            {% if user.is_authenticated %}
+                {% if user == article.author or user.role == 'publisher' %}
+                    <a href="{% url 'update_article' article.id %}">Edit Article</a>
+                {% endif %}
+            {% endif %}
+        </div>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>No approved articles available.</p>
+{% endif %}
 
 <h2>Newsletters</h2>
-{% for newsletter in newsletters %}
-    <div>
-        <h3>{{ newsletter.title }}</h3>
-        <p>{{ newsletter.content }}</p>
-        <p>Publisher: {{ newsletter.publisher }}</p>
-    </div>
-{% endfor %}
+{% if newsletters %}
+    {% for newsletter in newsletters %}
+        <div>
+            <h3>{{ newsletter.title }}</h3>
+            <p>{{ newsletter.content }}</p>
+            <p><strong>Publisher:</strong> {{ newsletter.publisher }}</p>
+        </div>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>No newsletters available.</p>
+{% endif %}
+{% endblock %}

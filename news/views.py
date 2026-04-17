@@ -19,8 +19,8 @@ from .serializers import ArticleSerializer
 # =========================
 # ROLE CHECKS
 # =========================
-def is_subscriber(user):
-    return user.is_authenticated and user.role == 'subscriber'
+def is_reader(user):
+    return user.is_authenticated and user.role == 'reader'
 
 
 def is_journalist(user):
@@ -35,7 +35,7 @@ def is_publisher(user):
 # CREATE GROUPS
 # =========================
 def create_groups():
-    groups = ['Subscriber', 'Journalist', 'Publisher']
+    groups = ['Reader', 'Journalist', 'Publisher']
     for group in groups:
         Group.objects.get_or_create(name=group)
 
@@ -54,7 +54,7 @@ def home(request):
 
     return render(request, 'news/home.html', {
         'articles': articles,
-        'newsletters': newsletters
+        'newsletters': newsletters,
     })
 
 
@@ -77,12 +77,22 @@ def create_article(request):
     if request.method == 'POST':
         form = ArticleForm(request.POST)
         if form.is_valid():
-            form.save()
+            article = form.save(commit=False)
+            article.author = request.user
+
+            if not article.publisher:
+                publisher = Publisher.objects.first()
+                if publisher:
+                    article.publisher = publisher
+
+            article.save()
+            messages.success(request, 'Article created successfully.')
             return redirect('home')
     else:
         form = ArticleForm()
 
     return render(request, 'news/create_article.html', {'form': form})
+
 
 # =========================
 # APPROVE ARTICLE
@@ -95,30 +105,28 @@ def approve_article(request, article_id):
     article.approved = True
     article.save()
 
-    # get subscribers of THIS publisher
     subscribers = CustomUser.objects.filter(
         subscribed_publishers=article.publisher
     ).values_list('email', flat=True)
 
     send_mail(
-        subject="New Article Published",
-        message=f"{article.title} is now live!",
-        from_email="admin@newsapp.com",
+        subject='New Article Published',
+        message=f'{article.title} is now live!',
+        from_email='admin@newsapp.com',
         recipient_list=list(subscribers),
         fail_silently=True,
     )
 
-    # X API (safe)
     try:
         requests.post(
-            "https://api.twitter.com/2/tweets",
-            headers={"Authorization": "Bearer YOUR_ACCESS_TOKEN"},
-            json={"text": f"New article: {article.title}"}
+            'https://api.twitter.com/2/tweets',
+            headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'},
+            json={'text': f'New article: {article.title}'},
         )
     except Exception:
         pass
 
-    messages.success(request, "Article approved.")
+    messages.success(request, 'Article approved.')
     return redirect('editor_dashboard')
 
 
@@ -130,15 +138,18 @@ def update_article(request, article_id):
     article = get_object_or_404(Article, id=article_id)
 
     if request.user != article.author and request.user.role != 'publisher':
+        messages.error(request, 'You do not have permission to edit this article.')
         return redirect('home')
 
     if request.method == 'POST':
         form = ArticleForm(request.POST, instance=article)
-
         if form.is_valid():
-            updated = form.save(commit=False)
-            updated.approved = False
-            updated.save()
+            updated_article = form.save(commit=False)
+            updated_article.author = article.author
+            updated_article.publisher = updated_article.publisher or article.publisher
+            updated_article.approved = False
+            updated_article.save()
+            messages.success(request, 'Article updated and sent for re-approval.')
             return redirect('home')
     else:
         form = ArticleForm(instance=article)
@@ -152,11 +163,8 @@ def update_article(request, article_id):
 def register(request):
     create_groups()
 
-    form = RegisterForm()
-
     if request.method == 'POST':
         form = RegisterForm(request.POST)
-
         if form.is_valid():
             user = form.save(commit=False)
             user.role = form.cleaned_data['role']
@@ -168,6 +176,8 @@ def register(request):
 
             login(request, user)
             return redirect('home')
+    else:
+        form = RegisterForm()
 
     return render(request, 'news/register.html', {'form': form})
 
@@ -180,10 +190,9 @@ class ArticleAPIView(APIView):
 
     def get(self, request):
         articles = Article.objects.filter(approved=True)
-
         user = request.user
 
-        if user.role == 'subscriber':
+        if user.role == 'reader':
             publisher_ids = user.subscribed_publishers.values_list('id', flat=True)
             journalist_ids = user.subscribed_journalists.values_list('id', flat=True)
 
@@ -205,13 +214,14 @@ def create_newsletter(request):
         return redirect('home')
 
     if request.method == 'POST':
-        publisher = Publisher.objects.first()  # simple safe default
+        publisher = Publisher.objects.first()
 
         Newsletter.objects.create(
             title=request.POST['title'],
             content=request.POST['content'],
-            publisher=publisher
+            publisher=publisher,
         )
+        messages.success(request, 'Newsletter created successfully.')
         return redirect('home')
 
     return render(request, 'news/create_newsletter.html')
@@ -221,6 +231,7 @@ def create_newsletter(request):
 # SUBSCRIPTIONS
 # =========================
 @login_required
+@user_passes_test(is_reader)
 def manage_subscriptions(request):
     publishers = Publisher.objects.all()
     journalists = CustomUser.objects.filter(role='journalist')
@@ -233,13 +244,14 @@ def manage_subscriptions(request):
         request.user.subscribed_journalists.set(
             CustomUser.objects.filter(
                 id__in=request.POST.getlist('journalists'),
-                role='journalist'
+                role='journalist',
             )
         )
 
+        messages.success(request, 'Subscriptions updated successfully.')
         return redirect('home')
 
     return render(request, 'news/subscriptions.html', {
         'publishers': publishers,
-        'journalists': journalists
+        'journalists': journalists,
     })

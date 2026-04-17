@@ -12,6 +12,11 @@
 
         {% if user.is_authenticated %}
             <a href="/create/">Create Article</a> |
+
+            {% if user.role == 'reader' %}
+                <a href="/subscriptions/">Subscriptions</a> |
+            {% endif %}
+
             {% if user.role == 'publisher' %}
                 <a href="/editor/">Editor Dashboard</a> |
             {% endif %}

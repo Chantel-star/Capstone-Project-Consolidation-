@@ -4,18 +4,17 @@ from .models import CustomUser, Article
 
 
 class RegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    role = forms.ChoiceField(choices=[
-    ('admin', 'Admin'),
-    ('publisher', 'Publisher'),
-    ('journalist', 'Journalist'),
-    ('subscriber', 'Subscriber'),
-])
+    ROLE_CHOICES = [
+        ("reader", "Reader"),
+        ("journalist", "Journalist"),
+        ("publisher", "Publisher"),
+    ]
+
+    role = forms.ChoiceField(choices=ROLE_CHOICES)
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'role', 'password1', 'password2']
-
+        fields = ["username", "email", "role", "password1", "password2"]
 
 class ArticleForm(forms.ModelForm):
     class Meta:

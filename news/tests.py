@@ -18,10 +18,10 @@ class ArticleAPITest(TestCase):
             role="reader"
         )
 
-        self.editor = User.objects.create_user(
-            username="editor",
+        self.journalist = User.objects.create_user(
+            username="journalist",
             password="testpass123",
-            role="editor"
+            role="journalist"
         )
 
         # Create publisher
@@ -35,14 +35,14 @@ class ArticleAPITest(TestCase):
             content="Test Content",
             approved=True,
             publisher=self.publisher,
-            author=self.editor
+            author=self.journalist
         )
 
         # Subscribe reader to publisher
         self.reader.subscribed_publishers.add(self.publisher)
 
     # -------------------------
-    # TEST 1: API AUTH REQUIRED
+    # TEST 1: API AUTH REQUIRED 
     # -------------------------
     def test_api_requires_auth(self):
         response = self.client.get('/api/articles/')
@@ -59,10 +59,10 @@ class ArticleAPITest(TestCase):
         self.assertEqual(len(response.data), 1)
 
     # -------------------------
-    # TEST 3: EDITOR GETS DATA (NO FILTER)
+    # TEST 3: JOURNALIST GETS DATA
     # -------------------------
-    def test_editor_can_access_articles(self):
-        self.client.login(username="editor", password="testpass123")
+    def test_journalist_can_access_articles(self):
+        self.client.login(username="journalist", password="testpass123")
         response = self.client.get('/api/articles/')
 
         self.assertEqual(response.status_code, 200)
