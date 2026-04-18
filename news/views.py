@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth import logout
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail
 import requests
@@ -136,7 +137,7 @@ def approve_article(request, article_id):
 @login_required
 def update_article(request, article_id):
     article = get_object_or_404(Article, id=article_id)
-
+    
     if request.user != article.author and request.user.role != 'publisher':
         messages.error(request, 'You do not have permission to edit this article.')
         return redirect('home')
@@ -156,6 +157,13 @@ def update_article(request, article_id):
 
     return render(request, 'news/update_article.html', {'form': form})
 
+
+# =========================
+# LOGOUT USER
+# =========================
+def logout_user(request):
+    logout(request)
+    return redirect('login')
 
 # =========================
 # REGISTER

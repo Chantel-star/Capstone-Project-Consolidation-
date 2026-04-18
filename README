@@ -68,3 +68,46 @@ Run tests:
 ```bash
 
 python manage.py test
+
+###UI Improvements
+
+Basic CSS styling has been added to improve:
+
+-Layout and spacing
+-Readability
+-Buttons and navigation
+
+###Future improvements:
+
+-Bootstrap integration
+-Responsive design
+-Enhanced user experience
+
+### 1. Clone the repository
+
+```bash
+
+git clone <https://github.com/Chantel-star/news_capstone.git>
+
+cd news_project
+
+### Create and activate virtual environment
+python -m venv venv
+
+### Activate it:
+venv\Scripts\activate
+
+### Install dependencies & Apply migrations
+ pip install -r requirements.txt
+python manage.py makemigrations
+python manage.py migrate
+
+### Create a superuser(admin)
+python manage.py createsuperuser
+
+### Run the development server
+pyhton manage.py  runserver
+
+### Open in browser
+go to:
+http://127.0.0.1:8000/
