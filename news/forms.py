@@ -5,7 +5,7 @@ from .models import CustomUser, Article
 
 class RegisterForm(UserCreationForm):
     ROLE_CHOICES = [
-        ("reader", "Reader"),
+        ("editor", "Editor"),
         ("journalist", "Journalist"),
         ("publisher", "Publisher"),
     ]

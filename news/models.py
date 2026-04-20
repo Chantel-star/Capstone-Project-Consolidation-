@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractUser
 # ROLE CHOICES
 # =========================
 ROLE_CHOICES = [
-    ("reader", "Reader"),
+    ("editor", "Editor"),
     ("journalist", "Journalist"),
     ("publisher", "Publisher"),
 ]

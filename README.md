@@ -1,4 +1,4 @@
-# News Application (Django Capstone Project)
+# News Application (News_capstone)
 
 ## Overview
 
@@ -89,7 +89,7 @@ Basic CSS styling has been added to improve:
 
 git clone <https://github.com/Chantel-star/news_capstone.git>
 
-cd news_project
+cd news_capstone
 
 ### Create and activate virtual environment
 python -m venv venv
