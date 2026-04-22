@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractUser
 # ROLE CHOICES
 # =========================
 ROLE_CHOICES = [
-    ("editor", "Editor"),
+    ("reader", "reader"),
     ("journalist", "Journalist"),
     ("publisher", "Publisher"),
 ]
@@ -21,20 +21,19 @@ role = models.CharField(
 # CUSTOM USER MODEL
 # =========================
 class CustomUser(AbstractUser):
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="reader")
 
     subscribed_publishers = models.ManyToManyField(
         'Publisher',
-        symmetrical=False,
         blank=True,
         related_name='subscribers'
     )
 
     subscribed_journalists = models.ManyToManyField(
-        'CustomUser',
+        'self',
         symmetrical=False,
         blank=True,
-        related_name='journalist_followers'
+        related_name='journalist_subscribers'
     )
 
 
@@ -58,8 +57,8 @@ class Article(models.Model):
     content = models.TextField()
     approved = models.BooleanField(default=False)
 
-    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)
-    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE, related_name='articles')
+    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='articles')
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -75,7 +74,7 @@ class Newsletter(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
 
-    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)
+    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE, related_name='newsletters')
 
     created_at = models.DateTimeField(auto_now_add=True)
 

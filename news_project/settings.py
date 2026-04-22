@@ -79,10 +79,10 @@ WSGI_APPLICATION = 'news_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'news_capstone_db',
+        'NAME': 'news_db',
         'USER': 'news_user',
-        'PASSWORD': 'NewsPass123!',
-        'HOST': '127.0.0.1',
+        'PASSWORD': 'password123',
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }
