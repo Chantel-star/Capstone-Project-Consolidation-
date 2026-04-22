@@ -43,34 +43,34 @@ def create_groups():
 # =========================
 # HOME VIEW
 # =========================
+@login_required
 def home(request):
     articles = Article.objects.filter(approved=True)
     newsletters = Newsletter.objects.none()
 
-    if request.user.is_authenticated:
-        if request.user.role == 'reader':
-            publisher_ids = request.user.subscribed_publishers.values_list(
-                'id',
-                flat=True,
-            )
-            journalist_ids = request.user.subscribed_journalists.values_list(
-                'id',
-                flat=True,
-            )
+    if request.user.role == 'reader':
+        publisher_ids = request.user.subscribed_publishers.values_list(
+            'id',
+            flat=True,
+        )
+        journalist_ids = request.user.subscribed_journalists.values_list(
+            'id',
+            flat=True,
+        )
 
-            articles = Article.objects.filter(
-                approved=True
-            ).filter(
-                Q(publisher_id__in=publisher_ids) |
-                Q(author_id__in=journalist_ids)
-            ).distinct()
+        articles = Article.objects.filter(
+            approved=True
+        ).filter(
+            Q(publisher_id__in=publisher_ids) |
+            Q(author_id__in=journalist_ids)
+        ).distinct()
 
-            newsletters = Newsletter.objects.filter(
-                publisher_id__in=publisher_ids
-            )
-        else:
-            articles = Article.objects.filter(approved=True)
-            newsletters = Newsletter.objects.all()
+        newsletters = Newsletter.objects.filter(
+            publisher_id__in=publisher_ids
+        )
+    else:
+        articles = Article.objects.filter(approved=True)
+        newsletters = Newsletter.objects.all()
 
     return render(request, 'news/home.html', {
         'articles': articles,
@@ -92,30 +92,21 @@ def editor_dashboard(request):
 # CREATE ARTICLE
 # =========================
 @login_required
-@user_passes_test(is_journalist)
 def create_article(request):
-    if request.method == 'POST':
+    if request.user.role != "journalist":
+        return redirect("home")
+
+    if request.method == "POST":
         form = ArticleForm(request.POST)
         if form.is_valid():
             article = form.save(commit=False)
             article.author = request.user
-
-            if not article.publisher:
-                publisher = Publisher.objects.first()
-                if publisher:
-                    article.publisher = publisher
-
-            article.approved = False
             article.save()
-            messages.success(
-                request,
-                'Article created successfully and sent for approval.',
-            )
-            return redirect('home')
+            return redirect("home")
     else:
         form = ArticleForm()
 
-    return render(request, 'news/create_article.html', {'form': form})
+    return render(request, "news/create_article.html", {"form": form})
 
 
 # =========================
@@ -128,9 +119,11 @@ def approve_article(request, article_id):
     article.approved = True
     article.save()
 
-    publisher_subscribers = CustomUser.objects.filter(
-        subscribed_publishers=article.publisher
-    ).exclude(email='').values_list('email', flat=True)
+    publisher_subscribers = []
+    if article.publisher:
+        publisher_subscribers = CustomUser.objects.filter(
+            subscribed_publishers=article.publisher
+        ).exclude(email='').values_list('email', flat=True)
 
     journalist_subscribers = CustomUser.objects.filter(
         subscribed_journalists=article.author
@@ -250,8 +243,8 @@ class ArticleAPIView(APIView):
             )
 
             articles = articles.filter(
-                publisher_id__in=publisher_ids,
-                author_id__in=journalist_ids,
+                Q(publisher_id__in=publisher_ids) |
+                Q(author_id__in=journalist_ids)
             ).distinct()
 
         serializer = ArticleSerializer(articles, many=True)

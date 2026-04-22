@@ -10,9 +10,12 @@ from .views import (
     update_article,
     ArticleAPIView,
 )
+from news import views
 
 urlpatterns = [
     path('', home, name='home'),
+    path("", views.home, name="home"),
+    path("create/", views.create_article, name="create_article"),
     path('approve/<int:article_id>/', approve_article, name='approve_article'),
     path('editor/', editor_dashboard, name='editor_dashboard'),
     path('register/', register, name='register'),

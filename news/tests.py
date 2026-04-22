@@ -50,20 +50,44 @@ class ArticleAPITest(TestCase):
             author=self.journalist,
         )
 
-        self.unsubscribed_publisher_article = Article.objects.create(
-            title='Other Publisher Article',
-            content='Should not be visible',
+        self.subscribed_journalist_article = Article.objects.create(
+            title='Subscribed Journalist Article',
+            content='Visible because journalist is subscribed',
             approved=True,
             publisher=self.other_publisher,
             author=self.journalist,
         )
 
-        self.unsubscribed_journalist_article = Article.objects.create(
-            title='Other Journalist Article',
-            content='Should also not be visible',
+        self.subscribed_publisher_article = Article.objects.create(
+            title='Subscribed Publisher Article',
+            content='Visible because publisher is subscribed',
             approved=True,
             publisher=self.publisher,
             author=self.other_journalist,
+        )
+
+        self.unsubscribed_article = Article.objects.create(
+            title='Unsubscribed Article',
+            content='Should not be visible',
+            approved=True,
+            publisher=self.other_publisher,
+            author=self.other_journalist,
+        )
+
+        self.unapproved_article = Article.objects.create(
+            title='Unapproved Article',
+            content='Should not be visible',
+            approved=False,
+            publisher=self.publisher,
+            author=self.journalist,
+        )
+
+        self.publisherless_article = Article.objects.create(
+            title='Publisherless Article',
+            content='Created without a publisher',
+            approved=True,
+            publisher=None,
+            author=self.journalist,
         )
 
         self.reader.subscribed_publishers.add(self.publisher)
@@ -73,29 +97,56 @@ class ArticleAPITest(TestCase):
         response = self.client.get('/api/articles/')
         self.assertEqual(response.status_code, 403)
 
-    def test_reader_receives_subscribed_content(self):
+    def test_reader_receives_article_from_subscribed_publisher_and_journalist(self):
         self.client.force_authenticate(user=self.reader)
         response = self.client.get('/api/articles/')
 
         self.assertEqual(response.status_code, 200)
-
         titles = [article['title'] for article in response.data]
+
         self.assertIn('Subscribed Article', titles)
 
-    def test_reader_does_not_receive_unsubscribed_publisher_content(self):
+    def test_reader_receives_article_from_subscribed_journalist(self):
         self.client.force_authenticate(user=self.reader)
         response = self.client.get('/api/articles/')
 
         self.assertEqual(response.status_code, 200)
-
         titles = [article['title'] for article in response.data]
-        self.assertNotIn('Other Publisher Article', titles)
 
-    def test_reader_does_not_receive_unsubscribed_journalist_content(self):
+        self.assertIn('Subscribed Journalist Article', titles)
+
+    def test_reader_receives_article_from_subscribed_publisher(self):
         self.client.force_authenticate(user=self.reader)
         response = self.client.get('/api/articles/')
 
         self.assertEqual(response.status_code, 200)
-
         titles = [article['title'] for article in response.data]
-        self.assertNotIn('Other Journalist Article', titles)
+
+        self.assertIn('Subscribed Publisher Article', titles)
+
+    def test_reader_does_not_receive_unsubscribed_content(self):
+        self.client.force_authenticate(user=self.reader)
+        response = self.client.get('/api/articles/')
+
+        self.assertEqual(response.status_code, 200)
+        titles = [article['title'] for article in response.data]
+
+        self.assertNotIn('Unsubscribed Article', titles)
+
+    def test_reader_does_not_receive_unapproved_articles(self):
+        self.client.force_authenticate(user=self.reader)
+        response = self.client.get('/api/articles/')
+
+        self.assertEqual(response.status_code, 200)
+        titles = [article['title'] for article in response.data]
+
+        self.assertNotIn('Unapproved Article', titles)
+
+    def test_reader_receives_publisherless_article_from_subscribed_journalist(self):
+        self.client.force_authenticate(user=self.reader)
+        response = self.client.get('/api/articles/')
+
+        self.assertEqual(response.status_code, 200)
+        titles = [article['title'] for article in response.data]
+
+        self.assertIn('Publisherless Article', titles)

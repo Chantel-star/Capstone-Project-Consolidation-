@@ -20,3 +20,7 @@ class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
         fields = ['title', 'content', 'publisher']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["publisher"].required = False

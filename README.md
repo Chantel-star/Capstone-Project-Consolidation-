@@ -1,113 +1,71 @@
-# News Application (News_capstone)
+# News Application
 
-## Overview
-
-This is a Django-based News Application that allows readers to view articles published by journalists and publishers. The system includes role-based access control, article approval workflows, and a RESTful API for external integration.
-
-Users are assigned roles (Reader, Editor, Journalist), and permissions are managed using Django’s authentication system and custom user model.
-
----
+This is a Django news application where users can register and interact with the system based on their roles.
 
 ## Features
 
-### User Roles
+- User registration and login
+- Role-based access
+- Journalists can create articles
+- Publishers can manage publishing-related content
+- Readers can view approved articles
+- Optional publisher assignment for articles
+- API endpoint for approved subscribed content
 
-- **Reader**
+## User Roles
 
-  - Can view approved articles
-  - Subscribes to publishers and journalists
+### Reader
+- Can register and log in
+- Can view approved articles
+- Can subscribe to publishers and journalists
 
-- **Editor**
-  - Reviews articles
-  - Approves or rejects articles
+### Journalist
+- Can register and log in
+- Can create articles independently
+- Does not need to belong to a publisher before creating an article
 
-- **Journalist**
-  - Creates articles
-  - Updates own articles
-  - Submits articles for approval
+### Publisher
+- Can register and log in
+- Can manage publisher-related content
+- Can approve articles if your app includes this feature
 
----
+## Important Business Rule
 
-### Article System
+Journalists are allowed to create articles **without being assigned to a publisher**.
 
-- Create articles (Journalists only)
-- Edit articles
-- Editor approval system
-- Only approved articles are visible to readers
+The `publisher` field on articles is optional, so articles can be created independently.
 
----
-
-### Authentication & Permissions
-
-- Custom User model (`AUTH_USER_MODEL`)
-- Role-based access control
-- Group-based permissions (Reader, Editor, Journalist)
-
----
-
-### REST API
-
-Endpoint:
-Returns articles based on:
-
-- User subscriptions (publishers & journalists)
-- Approved status
-
----
-
-### Testing
-
-Automated unit tests implemented using Django TestCase:
-
-- API authentication tests
-- Subscription filtering tests
-- Data integrity tests
-
-Run tests:
-
-```bash
-
-python manage.py test
-
-###UI Improvements
-
-Basic CSS styling has been added to improve:
-
--Layout and spacing
--Readability
--Buttons and navigation
-
-###Future improvements:
-
--Bootstrap integration
--Responsive design
--Enhanced user experience
+## Installation and Setup
 
 ### 1. Clone the repository
 
 ```bash
+git clone <your-github-repo-link>
+cd news_project
 
-git clone <https://github.com/Chantel-star/news_capstone.git>
-
-cd news_capstone
-
-### Create and activate virtual environment
+Create a virtual environment
 python -m venv venv
 
-### Activate it:
+3. Activate the virtual environment
+Windows
 venv\Scripts\activate
+macOS/Linux
+source venv/bin/activate
 
-### Install dependencies & Apply migrations
- pip install -r requirements.txt
+4. Install dependencies
+pip install -r requirements.txt
+
+5. Run migrations
 python manage.py makemigrations
 python manage.py migrate
 
-### Create a superuser(admin)
+6. Create a superuser
 python manage.py createsuperuser
 
-### Run the development server
-pyhton manage.py  runserver
+7. Start the development server
+python manage.py runserver
 
-### Open in browser
-go to:
-http://127.0.0.1:8000/
+
+Run tests with:
+
+python manage.py test
