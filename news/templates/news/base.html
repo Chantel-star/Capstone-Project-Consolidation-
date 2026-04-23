@@ -1,42 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>News App</title>
-
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
 <body>
+    <header class="site-header">
+        <div class="header-content">
+            <h1>News Application</h1>
 
-    <h1>News Application</h1>
+            <nav>
+                <a href="{% url 'home' %}">Home</a>
 
-    <nav>
-        <a href="/">Home</a> |
+                {% if user.is_authenticated %}
+                    {% if user.role == 'journalist' %}
+                        <a href="{% url 'create_article' %}">Create Article</a>
+                        <a href="{% url 'create_newsletter' %}">Create Newsletter</a>
+                    {% endif %}
 
-        {% if user.is_authenticated %}
-            <a href="/create/">Create Article</a> |
+                    {% if user.role == 'reader' %}
+                        <a href="{% url 'subscriptions' %}">Subscriptions</a>
+                    {% endif %}
 
-            {% if user.role == 'reader' %}
-                <a href="/subscriptions/">Subscriptions</a> |
-            {% endif %}
+                    {% if user.role == 'editor' %}
+                        <a href="{% url 'editor_dashboard' %}">Editor Dashboard</a>
+                    {% endif %}
 
-            {% if user.role == 'publisher' %}
-                <a href="/editor/">Editor Dashboard</a> |
-            {% endif %}
+                    <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Login</a>
+                    <a href="{% url 'register' %}">Register</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
 
-        {% else %}
-            <a href="/accounts/login/">Login</a> |
-            <a href="/register/">Register</a> |
-        {% endif %}
-        {% if user.is_authenticated %}
-    <a href="{% url 'logout' %}">Logout</a>
-{% endif %}
-    </nav>
-
-    <hr>
-
-    {% block content %}
-    {% endblock %}
-
+    <main class="page-wrapper">
+        {% block content %}
+        {% endblock %}
+    </main>
 </body>
-</html>

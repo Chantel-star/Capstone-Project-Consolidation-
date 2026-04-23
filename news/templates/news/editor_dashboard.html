@@ -1,0 +1,35 @@
+{% extends "news/base.html" %}
+
+{% block content %}
+<h2>Editor Dashboard</h2>
+
+<h3>Pending Articles</h3>
+{% for article in articles %}
+    <div>
+        <h4>{{ article.title }}</h4>
+        <p>{{ article.content }}</p>
+
+        <form method="post" action="{% url 'approve_article' article.id %}">
+            {% csrf_token %}
+            <button type="submit">Approve</button>
+        </form>
+    </div>
+{% empty %}
+    <p>No pending articles.</p>
+{% endfor %}
+
+<h3>Pending Newsletters</h3>
+{% for newsletter in newsletters %}
+    <div>
+        <h4>{{ newsletter.title }}</h4>
+        <p>{{ newsletter.content }}</p>
+
+        <form method="post" action="{% url 'approve_newsletter' newsletter.id %}">
+            {% csrf_token %}
+            <button type="submit">Approve</button>
+        </form>
+    </div>
+{% empty %}
+    <p>No pending newsletters.</p>
+{% endfor %}
+{% endblock %}
