@@ -78,8 +78,13 @@ WSGI_APPLICATION = "news_project.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "news_bd",
+        "USER": "news_user",
+        "PASSWORD": "password123",
+        "HOST": "localhost",
+        "PORT": "3306",
+        
     }
 }
 
