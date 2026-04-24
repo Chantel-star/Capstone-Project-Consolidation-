@@ -23,7 +23,6 @@ urlpatterns = [
         name="login",
     ),
     path("logout/", logout_user, name="logout"),
-
     path("create/", create_article, name="create_article"),
     path(
         "newsletters/create/",
@@ -35,7 +34,6 @@ urlpatterns = [
         update_article,
         name="update_article",
     ),
-
     path("editor/", editor_dashboard, name="editor_dashboard"),
     path(
         "approve/<int:article_id>/",
@@ -47,7 +45,6 @@ urlpatterns = [
         approve_newsletter,
         name="approve_newsletter",
     ),
-
     path("subscriptions/", manage_subscriptions, name="subscriptions"),
     path("api/articles/", ArticleAPIView.as_view(), name="api_articles"),
 ]

@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 
-
 # =========================
 # ROLE CHOICES
 # =========================
@@ -17,6 +16,8 @@ ROLE_CHOICES = [
 # CUSTOM USER MODEL
 # =========================
 class CustomUser(AbstractUser):
+    """Custom user model with role-based subscription behaviour."""
+
     role = models.CharField(
         max_length=20,
         choices=ROLE_CHOICES,
@@ -36,7 +37,18 @@ class CustomUser(AbstractUser):
         related_name="journalist_subscribers",
     )
 
+    def save(self, *args, **kwargs):
+        """Clear reader subscription fields for non-reader users."""
+
+        super().save(*args, **kwargs)
+
+        if self.role != "reader":
+            self.subscribed_publishers.clear()
+            self.subscribed_journalists.clear()
+
     def __str__(self):
+        """Return the username as the readable user name."""
+
         return self.username
 
 
@@ -44,12 +56,18 @@ class CustomUser(AbstractUser):
 # PUBLISHER MODEL
 # =========================
 class Publisher(models.Model):
-    name = models.CharField(max_length=255)
-    editor = models.OneToOneField(
+    """Represents a publisher that can have multiple editors and journalists."""
+
+    name = models.CharField(max_length=100)
+    editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="managed_publisher",
-        limit_choices_to={"role": "editor"},
+        related_name="editing_publishers",
+        blank=True,
+    )
+    journalists = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="journalist_publishers",
+        blank=True,
     )
 
     def __str__(self):
@@ -71,7 +89,8 @@ class Article(models.Model):
     publisher = models.ForeignKey(
         Publisher,
         on_delete=models.CASCADE,
-        related_name="articles",
+        null=True,
+        blank=True,
     )
     approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
