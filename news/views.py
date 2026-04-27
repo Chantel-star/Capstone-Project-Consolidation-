@@ -148,7 +148,7 @@ def create_article(request):
     else:
         form = ArticleForm()
 
-    return render(request, "create_article.html", {"form": form})
+    return render(request, "news/create_article.html", {"form": form})
 
 # =========================
 # APPROVE ARTICLE
@@ -257,32 +257,29 @@ def logout_user(request):
 # REGISTER
 # =========================
 def register(request):
-    create_groups()
-
     if request.method == "POST":
         form = RegisterForm(request.POST)
+
         if form.is_valid():
             user = form.save(commit=False)
-            user.role = form.cleaned_data["role"]
+
+            user.role = form.cleaned_data.get("role")
             user.save()
 
-            group = Group.objects.filter(name=user.role.capitalize()).first()
-            if group:
-                user.groups.add(group)
-
             if user.role == "editor":
-                Publisher.objects.create(
-                    name=f"{user.username}'s Publisher",
-                    editor=user,
+                publisher = Publisher.objects.create(
+                    name=f"{user.username}'s Publisher"
                 )
+                publisher.editors.add(user)
 
             login(request, user)
+            messages.success(request, "Registration successful.")
             return redirect("home")
+
     else:
         form = RegisterForm()
 
     return render(request, "news/register.html", {"form": form})
-
 
 # =========================
 # API VIEW
