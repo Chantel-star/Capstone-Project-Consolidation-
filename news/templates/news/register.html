@@ -1,17 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-</head>
-<body>
+{% extends "news/base.html" %}
 
-<h2>Create Account</h2>
+{% block content %}
+<div class="form-container">
+    <h2>Register</h2>
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Register</button>
-</form>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
 
-</body>
-</html>
+        <button type="submit" class="btn">Register</button>
+    </form>
+
+    <p>
+        Already have an account?
+        <a href="{% url 'login' %}">Login here</a>
+    </p>
+</div>
+{% endblock %}

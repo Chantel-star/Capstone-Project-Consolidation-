@@ -78,12 +78,12 @@ WSGI_APPLICATION = "news_project.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "news_bd",
-        "USER": "news_user",
-        "PASSWORD": "password123",
-        "HOST": "localhost",
-        "PORT": "3306", 
+        "ENGINE": "django.db.backends.mysql",  
+        "NAME": "news_db",  
+        "USER": "news_user", 
+        "PASSWORD": "password123", 
+        "HOST": "localhost", 
+        "PORT": "3306",
     }
 }
 
@@ -128,7 +128,8 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_REDIRECT_URL = "home"
-LOGOUT_REDIRECT_URL = "home"
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

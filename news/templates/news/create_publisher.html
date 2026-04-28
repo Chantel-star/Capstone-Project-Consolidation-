@@ -1,15 +1,17 @@
 {% extends "news/base.html" %}
 
+{% block title %}Create Publisher{% endblock %}
+
 {% block content %}
 <div class="form-container">
-    <h2>Create Article</h2>
+    <h1>Create Publisher</h1>
 
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
 
         <button type="submit" class="btn">
-            Create Article
+            Create Publisher
         </button>
     </form>
 

@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Article, Newsletter, CustomUser, Publisher
-from .forms import ArticleForm, RegisterForm
+from .forms import ArticleForm, RegisterForm, NewsletterForm, PublisherForm 
 from .serializers import ArticleSerializer
 from django.views.decorators.http import require_POST
 
@@ -111,38 +111,25 @@ def editor_dashboard(request):
         },
     )
 
-
 # =========================
 # CREATE ARTICLE
 # =========================
 @login_required
 def create_article(request):
-    """Allow journalists to create articles linked to a publisher."""
+    """Allow journalists to create articles."""
 
     if request.user.role != "journalist":
+        messages.error(request, "Only journalists can create articles.")
         return redirect("home")
 
     if request.method == "POST":
         form = ArticleForm(request.POST)
 
         if form.is_valid():
-            publisher = Publisher.objects.filter(
-                journalists=request.user
-            ).first()
-
-            if not publisher:
-                publisher = Publisher.objects.first()
-
-            if not publisher:
-                messages.error(request, "No publisher exists yet.")
-                return redirect("home")
-
             article = form.save(commit=False)
             article.author = request.user
-            article.publisher = publisher
+            article.approved = False
             article.save()
-            form.save_m2m()
-
             messages.success(request, "Article created successfully.")
             return redirect("home")
     else:
@@ -314,34 +301,55 @@ class ArticleAPIView(APIView):
 # =========================
 @login_required
 def create_newsletter(request):
+    """Allow journalists to create newsletters linked to a publisher."""
+
     if request.user.role != "journalist":
-        messages.error(
-            request,
-            "You do not have permission to create a newsletter.",
-        )
         return redirect("home")
 
     if request.method == "POST":
-        publisher = Publisher.objects.first()
+        form = NewsletterForm(request.POST)
 
-        if not publisher:
-            messages.error(request, "No publisher exists yet.")
+        if form.is_valid():
+            newsletter = form.save(commit=False)
+            newsletter.author = request.user
+            newsletter.save()
+            form.save_m2m()
+
+            messages.success(request, "Newsletter created successfully.")
             return redirect("home")
+    else:
+        form = NewsletterForm()
 
-        Newsletter.objects.create(
-            title=request.POST.get("title"),
-            content=request.POST.get("content"),
-            author=request.user,
-            publisher=publisher,
-            approved=False,
-        )
-        messages.success(
-            request,
-            "Newsletter created and sent for approval.",
-        )
+    form.fields["publisher"].queryset = Publisher.objects.filter(
+        journalists=request.user
+    )
+
+    return render(request, "news/create_newsletter.html", {"form": form})
+
+# =========================
+# CREATE PUBLISHER
+# =========================
+@login_required
+def create_publisher(request):
+    """Allow editors to create publishers and assign users."""
+
+    if request.user.role != "editor":
+        messages.error(request, "Only editors can create publishers.")
         return redirect("home")
 
-    return render(request, "news/create_newsletter.html")
+    if request.method == "POST":
+        form = PublisherForm(request.POST)
+
+        if form.is_valid():
+            publisher = form.save()
+            publisher.editors.add(request.user)
+
+            messages.success(request, "Publisher created successfully.")
+            return redirect("home")
+    else:
+        form = PublisherForm()
+
+    return render(request, "news/create_publisher.html", {"form": form})
 
 
 # ========================

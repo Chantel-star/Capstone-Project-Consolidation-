@@ -1,17 +1,20 @@
 {% extends "news/base.html" %}
 
 {% block content %}
-<h2>Create Newsletter</h2>
+<div class="form-container">
+    <h2>Create Newsletter</h2>
 
-<form method="post">
-    {% csrf_token %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
 
-    <label>Title:</label><br>
-    <input type="text" name="title" required><br><br>
+        <button type="submit" class="btn">
+            Create Newsletter
+        </button>
+    </form>
 
-    <label>Content:</label><br>
-    <textarea name="content" rows="5" required></textarea><br><br>
-
-    <button type="submit">Create Newsletter</button>
-</form>
+    <p>
+        <a href="{% url 'home' %}">Back to Home</a>
+    </p>
+</div>
 {% endblock %}

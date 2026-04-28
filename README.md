@@ -40,13 +40,15 @@ The `publisher` field on articles is optional, so articles can be created indepe
 ### 1. Clone the repository
 
 ```bash
-git clone <your-github-repo-link>
-cd news_project
+git clone https://github.com/Chantel-star/news_capstone.git
 
-Create a virtual environment
+2.Enter the project folder
+cd news_capstone
+
+3.Create a virtual environment
 python -m venv venv
 
-3. Activate the virtual environment
+4. Activate the virtual environment
 Windows
 venv\Scripts\activate
 macOS/Linux
@@ -55,16 +57,28 @@ source venv/bin/activate
 4. Install dependencies
 pip install -r requirements.txt
 
-5. Run migrations
+6. Create the MariaDB/MySQL database
+Log into MySQL:
+mysql -u root -p
+CREATE DATABASE news_db;
+EXIT;
+
+
+7. Run migrations
 python manage.py makemigrations
 python manage.py migrate
 
-6. Create a superuser
+8. Create a superuser
 python manage.py createsuperuser
 
-7. Start the development server
+9. Start the development server
 python manage.py runserver
 
+10. Open the application
+
+Go to:
+
+http://127.0.0.1:8000/
 
 Run tests with:
 

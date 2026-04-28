@@ -24,6 +24,12 @@ class CustomUser(AbstractUser):
         default="reader",
     )
 
+    email = models.EmailField(
+        unique=True,
+        blank=False,
+        null=False,
+    )
+
     subscribed_publishers = models.ManyToManyField(
         "Publisher",
         blank=True,
@@ -40,6 +46,9 @@ class CustomUser(AbstractUser):
     def save(self, *args, **kwargs):
         """Clear reader subscription fields for non-reader users."""
 
+        if self.email:
+            self.email = self.email.lower()
+
         super().save(*args, **kwargs)
 
         if self.role != "reader":
@@ -50,7 +59,6 @@ class CustomUser(AbstractUser):
         """Return the username as the readable user name."""
 
         return self.username
-
 
 # =========================
 # PUBLISHER MODEL
