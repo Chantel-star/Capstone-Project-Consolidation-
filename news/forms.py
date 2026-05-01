@@ -28,6 +28,12 @@ class ArticleForm(forms.ModelForm):
 
 
 class NewsletterForm(forms.ModelForm):
+    publisher = forms.ModelChoiceField(
+        queryset=Publisher.objects.all(),
+        empty_label="Select a publisher",
+        required=True,
+    )
+
     class Meta:
         model = Newsletter
         fields = [

@@ -12,32 +12,42 @@ class ArticleAPITest(TestCase):
 
         self.reader = User.objects.create_user(
             username="reader1",
+            email="reader1@test.com",
             password="testpass123",
             role="reader",
         )
 
         self.editor = User.objects.create_user(
             username="editor1",
+            email="editor1@test.com",
             password="testpass123",
             role="editor",
         )
 
         self.journalist = User.objects.create_user(
             username="journalist1",
+            email="journalist1@test.com",
             password="testpass123",
             role="journalist",
         )
 
         self.other_journalist = User.objects.create_user(
             username="journalist2",
+            email="journalist2@test.com",
             password="testpass123",
             role="journalist",
         )
 
-        self.publisher = Publisher.objects.create(name="Subscribed Publisher")
+        # Publishers
+        self.publisher = Publisher.objects.create(
+            name="Subscribed Publisher"
+        )
 
-        self.other_publisher = Publisher.objects.create(name="Unsubscribed Publisher")
+        self.other_publisher = Publisher.objects.create(
+            name="Unsubscribed Publisher"
+        )
 
+        # Articles
         self.subscribed_article = Article.objects.create(
             title="Subscribed Article",
             content="Visible to reader",
@@ -86,8 +96,13 @@ class ArticleAPITest(TestCase):
             author=self.journalist,
         )
 
+        # Subscriptions
         self.reader.subscribed_publishers.add(self.publisher)
         self.reader.subscribed_journalists.add(self.journalist)
+
+    # =========================
+    # TESTS
+    # =========================
 
     def test_api_requires_authentication(self):
         response = self.client.get("/api/articles/")

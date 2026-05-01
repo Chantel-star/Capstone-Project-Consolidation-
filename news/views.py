@@ -86,19 +86,16 @@ def home(request):
 @login_required
 @user_passes_test(is_editor)
 def editor_dashboard(request):
-    publisher = getattr(request.user, "managed_publisher", None)
-
-    if not publisher:
-        messages.error(request, "No publisher is linked to this editor.")
-        return redirect("home")
+    publishers = Publisher.objects.filter(editors=request.user)
 
     articles = Article.objects.filter(
         approved=False,
-        publisher=publisher,
+        publisher__in=publishers,
     )
+
     newsletters = Newsletter.objects.filter(
         approved=False,
-        publisher=publisher,
+        publisher__in=publishers,
     )
 
     return render(
@@ -107,10 +104,10 @@ def editor_dashboard(request):
         {
             "articles": articles,
             "newsletters": newsletters,
-            "publisher": publisher,
+            "publishers": publishers,
         },
     )
-
+    
 # =========================
 # CREATE ARTICLE
 # =========================
@@ -143,16 +140,12 @@ def create_article(request):
 @login_required
 @user_passes_test(is_editor)
 def approve_article(request, article_id):
-    publisher = getattr(request.user, "managed_publisher", None)
-
-    if not publisher:
-        messages.error(request, "No publisher is linked to this editor.")
-        return redirect("home")
+    publishers = Publisher.objects.filter(editors=request.user)
 
     article = get_object_or_404(
         Article,
         id=article_id,
-        publisher=publisher,
+        publisher__in=publishers,
     )
 
     article.approved = True
@@ -301,8 +294,6 @@ class ArticleAPIView(APIView):
 # =========================
 @login_required
 def create_newsletter(request):
-    """Allow journalists to create newsletters linked to a publisher."""
-
     if request.user.role != "journalist":
         return redirect("home")
 
@@ -312,20 +303,23 @@ def create_newsletter(request):
         if form.is_valid():
             newsletter = form.save(commit=False)
             newsletter.author = request.user
+            newsletter.approved = False
             newsletter.save()
-            form.save_m2m()
 
-            messages.success(request, "Newsletter created successfully.")
+            messages.success(
+                request,
+                "Newsletter submitted for editor approval."
+            )
             return redirect("home")
     else:
         form = NewsletterForm()
 
-    form.fields["publisher"].queryset = Publisher.objects.filter(
-        journalists=request.user
+    return render(
+        request,
+        "news/create_newsletter.html",
+        {"form": form}
     )
-
-    return render(request, "news/create_newsletter.html", {"form": form})
-
+    
 # =========================
 # CREATE PUBLISHER
 # =========================
@@ -358,16 +352,12 @@ def create_publisher(request):
 @login_required
 @user_passes_test(is_editor)
 def approve_newsletter(request, newsletter_id):
-    publisher = getattr(request.user, "managed_publisher", None)
-
-    if not publisher:
-        messages.error(request, "No publisher is linked to this editor.")
-        return redirect("home")
+    publishers = Publisher.objects.filter(editors=request.user)
 
     newsletter = get_object_or_404(
         Newsletter,
         id=newsletter_id,
-        publisher=publisher,
+        publisher__in=publishers,
     )
 
     newsletter.approved = True
@@ -375,7 +365,6 @@ def approve_newsletter(request, newsletter_id):
 
     messages.success(request, "Newsletter approved.")
     return redirect("editor_dashboard")
-
 
 # =========================
 # SUBSCRIPTIONS
