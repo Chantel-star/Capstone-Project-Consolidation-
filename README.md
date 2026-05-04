@@ -25,6 +25,7 @@ This is a Django news application where users can register and interact with the
 - Does not need to belong to a publisher before creating an article
 
 ### Publisher
+
 - Can register and log in
 - Can manage publisher-related content
 - Can approve articles if your app includes this feature
@@ -54,7 +55,7 @@ venv\Scripts\activate
 macOS/Linux
 source venv/bin/activate
 
-4. Install dependencies
+5. Install dependencies
 pip install -r requirements.txt
 
 6. Create the MariaDB/MySQL database
@@ -63,18 +64,27 @@ mysql -u root -p
 CREATE DATABASE news_db;
 EXIT;
 
+7.DATABASES = {
+    "default": { 
+        "ENGINE": "django.db.backends.mysql", 
+        "NAME": "news_db",  
+        "USER": "news_user", 
+        "PASSWORD": "password123", 
+        "HOST": "localhost",   
+        "PORT": "3306",   
+       
 
-7. Run migrations
+8. Run migrations
 python manage.py makemigrations
 python manage.py migrate
 
-8. Create a superuser
+9. Create a superuser
 python manage.py createsuperuser
 
-9. Start the development server
+10. Start the development server
 python manage.py runserver
 
-10. Open the application
+11. Open the application
 
 Go to:
 

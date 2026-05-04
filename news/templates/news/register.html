@@ -4,8 +4,15 @@
 <div class="form-container">
     <h2>Register</h2>
 
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: red;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
     <form method="post">
         {% csrf_token %}
+
         {{ form.as_p }}
 
         <button type="submit" class="btn">Register</button>

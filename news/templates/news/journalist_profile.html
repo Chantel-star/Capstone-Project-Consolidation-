@@ -1,0 +1,78 @@
+{% extends "news/base.html" %}
+
+{% block content %}
+<h2>My Profile</h2>
+
+<h3>Approved Articles</h3>
+{% if approved_articles %}
+    {% for article in approved_articles %}
+        <div>
+            <h4>{{ article.title }}</h4>
+            <p>{{ article.content }}</p>
+
+            <p>
+                <strong>Publisher:</strong>
+                {% if article.publisher %}
+                    {{ article.publisher.name }}
+                {% else %}
+                    Independent
+                {% endif %}
+            </p>
+        </div>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>No approved articles.</p>
+{% endif %}
+
+
+<h3>Pending Articles</h3>
+{% if pending_articles %}
+    {% for article in pending_articles %}
+        <div>
+            <h4>{{ article.title }}</h4>
+            <p>{{ article.content }}</p>
+
+            <p>
+                <strong>Status:</strong> Pending approval
+            </p>
+        </div>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>No pending articles.</p>
+{% endif %}
+
+
+<h3>Approved Newsletters</h3>
+{% if approved_newsletters %}
+    {% for newsletter in approved_newsletters %}
+        <div>
+            <h4>{{ newsletter.title }}</h4>
+            <p>{{ newsletter.content }}</p>
+        </div>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>No approved newsletters.</p>
+{% endif %}
+
+
+<h3>Pending Newsletters</h3>
+{% if pending_newsletters %}
+    {% for newsletter in pending_newsletters %}
+        <div>
+            <h4>{{ newsletter.title }}</h4>
+            <p>{{ newsletter.content }}</p>
+
+            <p>
+                <strong>Status:</strong> Pending approval
+            </p>
+        </div>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>No pending newsletters.</p>
+{% endif %}
+
+{% endblock %}

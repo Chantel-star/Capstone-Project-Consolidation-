@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail
+from django.views.decorators.http import require_POST
 import requests
 
 from rest_framework.views import APIView
@@ -12,9 +13,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Article, Newsletter, CustomUser, Publisher
-from .forms import ArticleForm, RegisterForm, NewsletterForm, PublisherForm 
+from .forms import ArticleForm, RegisterForm, NewsletterForm, PublisherForm
 from .serializers import ArticleSerializer
-from django.views.decorators.http import require_POST
 
 
 # =========================
@@ -37,6 +37,7 @@ def is_editor(user):
 # =========================
 def create_groups():
     groups = ["Reader", "Editor", "Journalist"]
+
     for group in groups:
         Group.objects.get_or_create(name=group)
 
@@ -61,13 +62,20 @@ def home(request):
 
         articles = (
             Article.objects.filter(approved=True)
-            .filter(Q(publisher_id__in=publisher_ids) | Q(author_id__in=journalist_ids))
+            .filter(
+                Q(publisher_id__in=publisher_ids)
+                | Q(author_id__in=journalist_ids)
+            )
             .distinct()
         )
 
-        newsletters = Newsletter.objects.filter(
-            approved=True,
-            publisher_id__in=publisher_ids,
+        newsletters = (
+            Newsletter.objects.filter(approved=True)
+            .filter(
+                Q(publisher_id__in=publisher_ids)
+                | Q(author_id__in=journalist_ids)
+            )
+            .distinct()
         )
 
     return render(
@@ -81,40 +89,51 @@ def home(request):
 
 
 # =========================
-# DASHBOARD (EDITOR)
+# EDITOR DASHBOARD
 # =========================
 @login_required
 @user_passes_test(is_editor)
 def editor_dashboard(request):
     publishers = Publisher.objects.filter(editors=request.user)
 
-    articles = Article.objects.filter(
+    pending_articles = Article.objects.filter(
         approved=False,
         publisher__in=publishers,
     )
 
-    newsletters = Newsletter.objects.filter(
+    pending_independent_articles = Article.objects.filter(
+        approved=False,
+        publisher__isnull=True,
+    )
+
+    pending_newsletters = Newsletter.objects.filter(
         approved=False,
         publisher__in=publishers,
     )
+
+    pending_independent_newsletters = Newsletter.objects.filter(
+        approved=False,
+        publisher__isnull=True,
+    )
+
+    pending_articles = pending_articles | pending_independent_articles
+    pending_newsletters = pending_newsletters | pending_independent_newsletters
 
     return render(
         request,
         "news/editor_dashboard.html",
         {
-            "articles": articles,
-            "newsletters": newsletters,
-            "publishers": publishers,
+            "pending_articles": pending_articles.distinct(),
+            "pending_newsletters": pending_newsletters.distinct(),
         },
     )
-    
+
+
 # =========================
 # CREATE ARTICLE
 # =========================
 @login_required
 def create_article(request):
-    """Allow journalists to create articles."""
-
     if request.user.role != "journalist":
         messages.error(request, "Only journalists can create articles.")
         return redirect("home")
@@ -126,35 +145,46 @@ def create_article(request):
             article = form.save(commit=False)
             article.author = request.user
             article.approved = False
+
+            if not form.cleaned_data.get("publisher"):
+                article.publisher = None
+
             article.save()
-            messages.success(request, "Article created successfully.")
+
+            messages.success(
+                request,
+                "Article submitted for editor approval.",
+            )
             return redirect("home")
     else:
         form = ArticleForm()
 
-    return render(request, "news/create_article.html", {"form": form})
+    return render(
+        request,
+        "news/create_article.html",
+        {"form": form},
+    )
+
 
 # =========================
 # APPROVE ARTICLE
 # =========================
+@require_POST
 @login_required
 @user_passes_test(is_editor)
 def approve_article(request, article_id):
-    publishers = Publisher.objects.filter(editors=request.user)
-
-    article = get_object_or_404(
-        Article,
-        id=article_id,
-        publisher__in=publishers,
-    )
+    article = get_object_or_404(Article, id=article_id)
 
     article.approved = True
     article.save()
 
     publisher_subscribers = []
+
     if article.publisher:
         publisher_subscribers = (
-            CustomUser.objects.filter(subscribed_publishers=article.publisher)
+            CustomUser.objects.filter(
+                subscribed_publishers=article.publisher
+            )
             .exclude(email="")
             .values_list("email", flat=True)
         )
@@ -206,12 +236,17 @@ def update_article(request, article_id):
 
     if request.method == "POST":
         form = ArticleForm(request.POST, instance=article)
+
         if form.is_valid():
             updated_article = form.save(commit=False)
             updated_article.author = article.author
-            updated_article.publisher = updated_article.publisher or article.publisher
             updated_article.approved = False
+
+            if not form.cleaned_data.get("publisher"):
+                updated_article.publisher = None
+
             updated_article.save()
+
             messages.success(
                 request,
                 "Article updated and sent for re-approval.",
@@ -220,17 +255,166 @@ def update_article(request, article_id):
     else:
         form = ArticleForm(instance=article)
 
-    return render(request, "news/update_article.html", {"form": form})
+    return render(
+        request,
+        "news/update_article.html",
+        {"form": form},
+    )
 
 
 # =========================
-# LOGOUT USER
+# CREATE NEWSLETTER
+# =========================
+@login_required
+def create_newsletter(request):
+    if request.user.role != "journalist":
+        messages.error(request, "Only journalists can create newsletters.")
+        return redirect("home")
+
+    if request.method == "POST":
+        form = NewsletterForm(request.POST)
+
+        if form.is_valid():
+            newsletter = form.save(commit=False)
+            newsletter.author = request.user
+            newsletter.approved = False
+
+            if not form.cleaned_data.get("publisher"):
+                newsletter.publisher = None
+
+            newsletter.save()
+
+            messages.success(
+                request,
+                "Newsletter submitted for editor approval.",
+            )
+            return redirect("home")
+    else:
+        form = NewsletterForm()
+
+    return render(
+        request,
+        "news/create_newsletter.html",
+        {"form": form},
+    )
+
+
+# =========================
+# APPROVE NEWSLETTER
 # =========================
 @require_POST
 @login_required
-def logout_user(request):
-    logout(request)
-    return redirect("login")
+@user_passes_test(is_editor)
+def approve_newsletter(request, newsletter_id):
+    newsletter = get_object_or_404(Newsletter, id=newsletter_id)
+
+    newsletter.approved = True
+    newsletter.save()
+
+    messages.success(request, "Newsletter approved.")
+    return redirect("editor_dashboard")
+
+
+# =========================
+# CREATE PUBLISHER
+# =========================
+@login_required
+def create_publisher(request):
+    if request.user.role != "editor":
+        messages.error(request, "Only editors can create publishers.")
+        return redirect("home")
+
+    if request.method == "POST":
+        form = PublisherForm(request.POST)
+
+        if form.is_valid():
+            publisher = form.save()
+            publisher.editors.add(request.user)
+
+            messages.success(request, "Publisher created successfully.")
+            return redirect("home")
+    else:
+        form = PublisherForm()
+
+    return render(
+        request,
+        "news/create_publisher.html",
+        {"form": form},
+    )
+
+
+# =========================
+# JOURNALIST PROFILE
+# =========================
+@login_required
+@user_passes_test(is_journalist)
+def journalist_profile(request):
+    approved_articles = Article.objects.filter(
+        author=request.user,
+        approved=True,
+    )
+
+    pending_articles = Article.objects.filter(
+        author=request.user,
+        approved=False,
+    )
+
+    approved_newsletters = Newsletter.objects.filter(
+        author=request.user,
+        approved=True,
+    )
+
+    pending_newsletters = Newsletter.objects.filter(
+        author=request.user,
+        approved=False,
+    )
+
+    return render(
+        request,
+        "news/journalist_profile.html",
+        {
+            "approved_articles": approved_articles,
+            "pending_articles": pending_articles,
+            "approved_newsletters": approved_newsletters,
+            "pending_newsletters": pending_newsletters,
+        },
+    )
+
+
+# =========================
+# SUBSCRIPTIONS
+# =========================
+@login_required
+@user_passes_test(is_reader)
+def manage_subscriptions(request):
+    publishers = Publisher.objects.all()
+    journalists = CustomUser.objects.filter(role="journalist")
+
+    if request.method == "POST":
+        request.user.subscribed_publishers.set(
+            Publisher.objects.filter(
+                id__in=request.POST.getlist("publishers")
+            )
+        )
+
+        request.user.subscribed_journalists.set(
+            CustomUser.objects.filter(
+                id__in=request.POST.getlist("journalists"),
+                role="journalist",
+            )
+        )
+
+        messages.success(request, "Subscriptions updated successfully.")
+        return redirect("home")
+
+    return render(
+        request,
+        "news/subscriptions.html",
+        {
+            "publishers": publishers,
+            "journalists": journalists,
+        },
+    )
 
 
 # =========================
@@ -242,24 +426,31 @@ def register(request):
 
         if form.is_valid():
             user = form.save(commit=False)
-
             user.role = form.cleaned_data.get("role")
             user.save()
-
-            if user.role == "editor":
-                publisher = Publisher.objects.create(
-                    name=f"{user.username}'s Publisher"
-                )
-                publisher.editors.add(user)
 
             login(request, user)
             messages.success(request, "Registration successful.")
             return redirect("home")
-
     else:
         form = RegisterForm()
 
-    return render(request, "news/register.html", {"form": form})
+    return render(
+        request,
+        "news/register.html",
+        {"form": form},
+    )
+
+
+# =========================
+# LOGOUT USER
+# =========================
+@require_POST
+@login_required
+def logout_user(request):
+    logout(request)
+    return redirect("login")
+
 
 # =========================
 # API VIEW
@@ -281,120 +472,13 @@ class ArticleAPIView(APIView):
                 flat=True,
             )
 
-            articles = articles.filter(
-                Q(publisher_id__in=publisher_ids) | Q(author_id__in=journalist_ids)
-            ).distinct()
+            articles = (
+                articles.filter(
+                    Q(publisher_id__in=publisher_ids)
+                    | Q(author_id__in=journalist_ids)
+                )
+                .distinct()
+            )
 
         serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data)
-
-
-# =========================
-# CREATE NEWSLETTER
-# =========================
-@login_required
-def create_newsletter(request):
-    if request.user.role != "journalist":
-        return redirect("home")
-
-    if request.method == "POST":
-        form = NewsletterForm(request.POST)
-
-        if form.is_valid():
-            newsletter = form.save(commit=False)
-            newsletter.author = request.user
-            newsletter.approved = False
-            newsletter.save()
-
-            messages.success(
-                request,
-                "Newsletter submitted for editor approval."
-            )
-            return redirect("home")
-    else:
-        form = NewsletterForm()
-
-    return render(
-        request,
-        "news/create_newsletter.html",
-        {"form": form}
-    )
-    
-# =========================
-# CREATE PUBLISHER
-# =========================
-@login_required
-def create_publisher(request):
-    """Allow editors to create publishers and assign users."""
-
-    if request.user.role != "editor":
-        messages.error(request, "Only editors can create publishers.")
-        return redirect("home")
-
-    if request.method == "POST":
-        form = PublisherForm(request.POST)
-
-        if form.is_valid():
-            publisher = form.save()
-            publisher.editors.add(request.user)
-
-            messages.success(request, "Publisher created successfully.")
-            return redirect("home")
-    else:
-        form = PublisherForm()
-
-    return render(request, "news/create_publisher.html", {"form": form})
-
-
-# ========================
-# APPROVE_NEWSLETTER
-# =========================
-@login_required
-@user_passes_test(is_editor)
-def approve_newsletter(request, newsletter_id):
-    publishers = Publisher.objects.filter(editors=request.user)
-
-    newsletter = get_object_or_404(
-        Newsletter,
-        id=newsletter_id,
-        publisher__in=publishers,
-    )
-
-    newsletter.approved = True
-    newsletter.save()
-
-    messages.success(request, "Newsletter approved.")
-    return redirect("editor_dashboard")
-
-# =========================
-# SUBSCRIPTIONS
-# =========================
-@login_required
-@user_passes_test(is_reader)
-def manage_subscriptions(request):
-    publishers = Publisher.objects.all()
-    journalists = CustomUser.objects.filter(role="journalist")
-
-    if request.method == "POST":
-        request.user.subscribed_publishers.set(
-            Publisher.objects.filter(id__in=request.POST.getlist("publishers"))
-        )
-
-        request.user.subscribed_journalists.set(
-            CustomUser.objects.filter(
-                id__in=request.POST.getlist("journalists"),
-                role="journalist",
-            )
-        )
-
-        messages.success(request, "Subscriptions updated successfully.")
-        return redirect("home")
-
-    return render(
-        request,
-        "news/subscriptions.html",
-        {
-            "publishers": publishers,
-            "journalists": journalists,
-        },
-    )

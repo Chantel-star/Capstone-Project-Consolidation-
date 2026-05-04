@@ -3,10 +3,17 @@
 {% block content %}
 <h1>Manage Subscriptions</h1>
 
+{% if messages %}
+    {% for message in messages %}
+        <p style="color: green;">{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
 <form method="post">
     {% csrf_token %}
 
     <h2>Publishers</h2>
+
     {% if publishers %}
         {% for publisher in publishers %}
             <div>
@@ -15,7 +22,9 @@
                         type="checkbox"
                         name="publishers"
                         value="{{ publisher.id }}"
-                        {% if publisher in user.subscribed_publishers.all %}checked{% endif %}
+                        {% if publisher in user.subscribed_publishers.all %}
+                            checked
+                        {% endif %}
                     >
                     {{ publisher.name }}
                 </label>
@@ -26,6 +35,7 @@
     {% endif %}
 
     <h2>Journalists</h2>
+
     {% if journalists %}
         {% for journalist in journalists %}
             <div>
@@ -34,7 +44,9 @@
                         type="checkbox"
                         name="journalists"
                         value="{{ journalist.id }}"
-                        {% if journalist in user.subscribed_journalists.all %}checked{% endif %}
+                        {% if journalist in user.subscribed_journalists.all %}
+                            checked
+                        {% endif %}
                     >
                     {{ journalist.username }}
                 </label>
@@ -43,6 +55,11 @@
     {% else %}
         <p>No journalists available.</p>
     {% endif %}
+
+    <p style="font-size: 14px; color: gray;">
+        Select publishers and journalists you want to follow.
+        You will receive updates from their approved articles and newsletters.
+    </p>
 
     <br>
     <button type="submit">Save Subscriptions</button>

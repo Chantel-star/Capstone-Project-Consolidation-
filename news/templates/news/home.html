@@ -4,19 +4,30 @@
 <h1>Home</h1>
 
 <h2>Approved Articles</h2>
+
 {% if articles %}
     {% for article in articles %}
         <div>
             <h3>{{ article.title }}</h3>
             <p>{{ article.content }}</p>
             <p><strong>Author:</strong> {{ article.author }}</p>
-            <p><strong>Publisher:</strong> {{ article.publisher }}</p>
+
+            <p>
+                <strong>Publisher:</strong>
+                {% if article.publisher %}
+                    {{ article.publisher.name }}
+                {% else %}
+                    Independent
+                {% endif %}
+            </p>
 
             {% if user.is_authenticated %}
-                {% if user == article.author or user.role == 'publisher' %}
-                    <a href="{% url 'update_article' article.id %}">Edit Article</a>
-                {% endif %}
-            {% endif %}
+    {% if user == article.author or user.role == 'editor' %}
+        <a href="{% url 'update_article' article.id %}">
+            Edit Article
+        </a>
+    {% endif %}
+{% endif %}
         </div>
         <hr>
     {% endfor %}
@@ -25,16 +36,26 @@
 {% endif %}
 
 <h2>Newsletters</h2>
+
 {% if newsletters %}
     {% for newsletter in newsletters %}
         <div>
             <h3>{{ newsletter.title }}</h3>
             <p>{{ newsletter.content }}</p>
-            <p><strong>Publisher:</strong> {{ newsletter.publisher }}</p>
+
+            <p>
+                <strong>Publisher:</strong>
+                {% if newsletter.publisher %}
+                    {{ newsletter.publisher.name }}
+                {% else %}
+                    Independent
+                {% endif %}
+            </p>
         </div>
         <hr>
     {% endfor %}
 {% else %}
     <p>No newsletters available.</p>
 {% endif %}
+
 {% endblock %}

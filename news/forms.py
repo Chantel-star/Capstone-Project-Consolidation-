@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import CustomUser, Article, Newsletter, Publisher
+
+from .models import Article, CustomUser, Newsletter, Publisher
 
 
 class RegisterForm(UserCreationForm):
@@ -30,8 +31,8 @@ class ArticleForm(forms.ModelForm):
 class NewsletterForm(forms.ModelForm):
     publisher = forms.ModelChoiceField(
         queryset=Publisher.objects.all(),
-        empty_label="Select a publisher",
-        required=True,
+        empty_label="Independent",
+        required=False,
     )
 
     class Meta:
@@ -46,8 +47,15 @@ class NewsletterForm(forms.ModelForm):
 class PublisherForm(forms.ModelForm):
     class Meta:
         model = Publisher
-        fields = [
-            "name",
-            "editors",
-            "journalists",
-        ]
+        fields = ["name", "editors", "journalists"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["editors"].queryset = CustomUser.objects.filter(
+            role="editor"
+        )
+
+        self.fields["journalists"].queryset = CustomUser.objects.filter(
+            role="journalist"
+        )

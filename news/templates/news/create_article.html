@@ -6,7 +6,12 @@
 
     <form method="post">
         {% csrf_token %}
+
         {{ form.as_p }}
+
+        <p style="font-size: 14px; color: gray;">
+            Leave publisher empty to publish as <strong>Independent</strong>.
+        </p>
 
         <button type="submit" class="btn">
             Create Article

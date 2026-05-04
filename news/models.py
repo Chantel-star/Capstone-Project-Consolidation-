@@ -96,7 +96,7 @@ class Article(models.Model):
     )
     publisher = models.ForeignKey(
         Publisher,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
@@ -121,7 +121,9 @@ class Newsletter(models.Model):
     )
     publisher = models.ForeignKey(
         Publisher,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="newsletters",
     )
     approved = models.BooleanField(default=False)

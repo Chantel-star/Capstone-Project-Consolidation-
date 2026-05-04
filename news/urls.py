@@ -13,6 +13,7 @@ from .views import (
     ArticleAPIView,
     manage_subscriptions,
     create_publisher,
+    journalist_profile, 
 )
 
 urlpatterns = [
@@ -34,7 +35,7 @@ urlpatterns = [
     ),
 
     path(
-        "publisher/create/",   
+        "publisher/create/",
         create_publisher,
         name="create_publisher",
     ),
@@ -58,6 +59,21 @@ urlpatterns = [
         name="approve_newsletter",
     ),
 
-    path("subscriptions/", manage_subscriptions, name="subscriptions"),
-    path("api/articles/", ArticleAPIView.as_view(), name="api_articles"),
+    path(
+        "subscriptions/",
+        manage_subscriptions,
+        name="subscriptions",
+    ),
+
+    path(
+        "journalist/",
+        journalist_profile,
+        name="journalist_profile",
+    ),
+
+    path(
+        "api/articles/",
+        ArticleAPIView.as_view(),
+        name="api_articles",
+    ),
 ]

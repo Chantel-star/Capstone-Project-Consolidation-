@@ -8,7 +8,16 @@
 
     <form method="post">
         {% csrf_token %}
+
         {{ form.as_p }}
+
+        <p style="font-size: 14px; color: gray;">
+            Only users with the correct roles will appear:
+            <br>
+            - Editors list shows users with <strong>editor</strong> role
+            <br>
+            - Journalists list shows users with <strong>journalist</strong> role
+        </p>
 
         <button type="submit" class="btn">
             Create Publisher

@@ -10,10 +10,23 @@
         <div>
             <h4>{{ article.title }}</h4>
             <p>{{ article.content }}</p>
-            <p><strong>Publisher:</strong> {{ article.publisher }}</p>
-            <a href="{% url 'approve_article' article.id %}">
-                Approve Article
-            </a>
+            <p><strong>Author:</strong> {{ article.author }}</p>
+
+            <p>
+                <strong>Publisher:</strong>
+                {% if article.publisher %}
+                    {{ article.publisher.name }}
+                {% else %}
+                    Independent
+                {% endif %}
+            </p>
+
+            <form method="post" action="{% url 'approve_article' article.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn">
+                    Approve Article
+                </button>
+            </form>
         </div>
         <hr>
     {% endfor %}
@@ -28,10 +41,24 @@
         <div>
             <h4>{{ newsletter.title }}</h4>
             <p>{{ newsletter.content }}</p>
-            <p><strong>Publisher:</strong> {{ newsletter.publisher }}</p>
-            <a href="{% url 'approve_newsletter' newsletter.id %}">
-                Approve Newsletter
-            </a>
+            <p><strong>Author:</strong> {{ newsletter.author }}</p>
+
+            <p>
+                <strong>Publisher:</strong>
+                {% if newsletter.publisher %}
+                    {{ newsletter.publisher.name }}
+                {% else %}
+                    Independent
+                {% endif %}
+            </p>
+
+            <form method="post"
+                  action="{% url 'approve_newsletter' newsletter.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn">
+                    Approve Newsletter
+                </button>
+            </form>
         </div>
         <hr>
     {% endfor %}

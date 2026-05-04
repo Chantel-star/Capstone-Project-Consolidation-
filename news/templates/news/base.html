@@ -15,19 +15,27 @@
         <a href="{% url 'home' %}">Home</a>
 
         {% if user.is_authenticated %}
+
             {% if user.role == "journalist" %}
                 <a href="{% url 'create_article' %}">Create Article</a>
                 <a href="{% url 'create_newsletter' %}">Create Newsletter</a>
+                <a href="{% url 'journalist_profile' %}">My Profile</a>
             {% endif %}
 
             {% if user.role == "editor" %}
+                <a href="{% url 'editor_dashboard' %}">Editor Dashboard</a>
                 <a href="{% url 'create_publisher' %}">Create Publisher</a>
+            {% endif %}
+
+            {% if user.role == "reader" %}
+                <a href="{% url 'subscriptions' %}">Subscriptions</a>
             {% endif %}
 
             <form method="post" action="{% url 'logout' %}" class="logout-form">
                 {% csrf_token %}
                 <button type="submit">Logout</button>
             </form>
+
         {% else %}
             <a href="{% url 'login' %}">Login</a>
             <a href="{% url 'register' %}">Register</a>
@@ -36,6 +44,8 @@
 </nav>
 
 <main class="container">
+
+    
     {% if messages %}
         {% for message in messages %}
             <p class="message">{{ message }}</p>
@@ -44,6 +54,7 @@
 
     {% block content %}
     {% endblock %}
+
 </main>
 
 </body>
