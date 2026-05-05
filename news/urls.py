@@ -1,19 +1,23 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
+
 from .views import (
-    home,
-    register,
-    create_article,
-    create_newsletter,
-    update_article,
-    editor_dashboard,
+    ArticleAPIView,
     approve_article,
     approve_newsletter,
-    logout_user,
-    ArticleAPIView,
-    manage_subscriptions,
+    create_article,
+    create_newsletter,
     create_publisher,
-    journalist_profile, 
+    delete_article,
+    delete_newsletter,
+    editor_dashboard,
+    home,
+    journalist_profile,
+    logout_user,
+    manage_subscriptions,
+    register,
+    update_article,
+    update_newsletter,
 )
 
 urlpatterns = [
@@ -28,52 +32,35 @@ urlpatterns = [
     path("logout/", logout_user, name="logout"),
 
     path("create/", create_article, name="create_article"),
-    path(
-        "newsletters/create/",
-        create_newsletter,
-        name="create_newsletter",
-    ),
+    path("newsletters/create/", create_newsletter, name="create_newsletter"),
+
+    path("publisher/create/", create_publisher, name="create_publisher"),
+
+    path("update/<int:article_id>/", update_article, name="update_article"),
+    path("delete/<int:article_id>/", delete_article, name="delete_article"),
 
     path(
-        "publisher/create/",
-        create_publisher,
-        name="create_publisher",
+        "newsletters/update/<int:newsletter_id>/",
+        update_newsletter,
+        name="update_newsletter",
     ),
-
     path(
-        "update/<int:article_id>/",
-        update_article,
-        name="update_article",
+        "newsletters/delete/<int:newsletter_id>/",
+        delete_newsletter,
+        name="delete_newsletter",
     ),
 
     path("editor/", editor_dashboard, name="editor_dashboard"),
 
-    path(
-        "approve/<int:article_id>/",
-        approve_article,
-        name="approve_article",
-    ),
+    path("approve/<int:article_id>/", approve_article, name="approve_article"),
     path(
         "approve-newsletter/<int:newsletter_id>/",
         approve_newsletter,
         name="approve_newsletter",
     ),
 
-    path(
-        "subscriptions/",
-        manage_subscriptions,
-        name="subscriptions",
-    ),
+    path("subscriptions/", manage_subscriptions, name="subscriptions"),
+    path("journalist/", journalist_profile, name="journalist_profile"),
 
-    path(
-        "journalist/",
-        journalist_profile,
-        name="journalist_profile",
-    ),
-
-    path(
-        "api/articles/",
-        ArticleAPIView.as_view(),
-        name="api_articles",
-    ),
+    path("api/articles/", ArticleAPIView.as_view(), name="api_articles"),
 ]

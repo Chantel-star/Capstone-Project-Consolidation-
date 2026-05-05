@@ -261,6 +261,121 @@ def update_article(request, article_id):
         {"form": form},
     )
 
+# =========================
+# DELETE ARTICLE
+# =========================
+@login_required
+def delete_article(request, article_id):
+    article = get_object_or_404(Article, id=article_id)
+
+    if request.user != article.author and request.user.role != "editor":
+        messages.error(
+            request,
+            "You do not have permission to delete this article.",
+        )
+        return redirect("home")
+
+    if request.method == "POST":
+        article.delete()
+
+        messages.success(
+            request,
+            "Article deleted successfully.",
+        )
+        return redirect("journalist_profile")
+
+    return render(
+        request,
+        "news/delete_article.html",
+        {"article": article},
+    )
+
+
+# =========================
+# UPDATE NEWSLETTER
+# =========================
+@login_required
+def update_newsletter(request, newsletter_id):
+    newsletter = get_object_or_404(
+        Newsletter,
+        id=newsletter_id,
+    )
+
+    if (
+        request.user != newsletter.author
+        and request.user.role != "editor"
+    ):
+        messages.error(
+            request,
+            "You do not have permission to edit this newsletter.",
+        )
+        return redirect("home")
+
+    if request.method == "POST":
+        form = NewsletterForm(
+            request.POST,
+            instance=newsletter,
+        )
+
+        if form.is_valid():
+            updated_newsletter = form.save(commit=False)
+            updated_newsletter.author = newsletter.author
+            updated_newsletter.approved = False
+
+            if not form.cleaned_data.get("publisher"):
+                updated_newsletter.publisher = None
+
+            updated_newsletter.save()
+
+            messages.success(
+                request,
+                "Newsletter updated and sent for re-approval.",
+            )
+            return redirect("home")
+    else:
+        form = NewsletterForm(instance=newsletter)
+
+    return render(
+        request,
+        "news/update_newsletter.html",
+        {"form": form},
+    )
+
+
+# =========================
+# DELETE NEWSLETTER
+# =========================
+@login_required
+def delete_newsletter(request, newsletter_id):
+    newsletter = get_object_or_404(
+        Newsletter,
+        id=newsletter_id,
+    )
+
+    if (
+        request.user != newsletter.author
+        and request.user.role != "editor"
+    ):
+        messages.error(
+            request,
+            "You do not have permission to delete this newsletter.",
+        )
+        return redirect("home")
+
+    if request.method == "POST":
+        newsletter.delete()
+
+        messages.success(
+            request,
+            "Newsletter deleted successfully.",
+        )
+        return redirect("journalist_profile")
+
+    return render(
+        request,
+        "news/delete_newsletter.html",
+        {"newsletter": newsletter},
+    )
 
 # =========================
 # CREATE NEWSLETTER
