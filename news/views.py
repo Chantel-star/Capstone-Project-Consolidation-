@@ -47,6 +47,7 @@ def create_groups():
 # =========================
 @login_required
 def home(request):
+     """Display approved articles and newsletters."""
     articles = Article.objects.filter(approved=True)
     newsletters = Newsletter.objects.filter(approved=True)
 
@@ -94,6 +95,8 @@ def home(request):
 @login_required
 @user_passes_test(is_editor)
 def editor_dashboard(request):
+     """Display pending content for editors."""
+    
     publishers = Publisher.objects.filter(editors=request.user)
 
     pending_articles = Article.objects.filter(
@@ -134,6 +137,7 @@ def editor_dashboard(request):
 # =========================
 @login_required
 def create_article(request):
+     """Allow journalists to create articles."""
     if request.user.role != "journalist":
         messages.error(request, "Only journalists can create articles.")
         return redirect("home")
@@ -536,6 +540,8 @@ def manage_subscriptions(request):
 # REGISTER
 # =========================
 def register(request):
+     """Register a new user account."""
+    
     if request.method == "POST":
         form = RegisterForm(request.POST)
 
