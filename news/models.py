@@ -16,8 +16,7 @@ ROLE_CHOICES = [
 # CUSTOM USER MODEL
 # =========================
 class CustomUser(AbstractUser):
-    """Custom user model with role-based subscription behaviour."""
-
+     """Custom user model with role support."""
     role = models.CharField(
         max_length=20,
         choices=ROLE_CHOICES,
@@ -64,8 +63,7 @@ class CustomUser(AbstractUser):
 # PUBLISHER MODEL
 # =========================
 class Publisher(models.Model):
-    """Represents a publisher that can have multiple editors and journalists."""
-
+     """Model representing a news article."""
     name = models.CharField(max_length=100)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -104,6 +102,7 @@ class Article(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        """Return the article title."""
         return self.title
 
 
@@ -111,6 +110,8 @@ class Article(models.Model):
 # NEWSLETTER MODEL
 # =========================
 class Newsletter(models.Model):
+     """Model representing a newsletter post."""
+     
     title = models.CharField(max_length=255)
     content = models.TextField()
     author = models.ForeignKey(
