@@ -47,7 +47,7 @@ def create_groups():
 # =========================
 @login_required
 def home(request):
-     """Display approved articles and newsletters."""
+"""Display approved articles and newsletters."""
     articles = Article.objects.filter(approved=True)
     newsletters = Newsletter.objects.filter(approved=True)
 
@@ -229,6 +229,7 @@ def approve_article(request, article_id):
 # =========================
 @login_required
 def update_article(request, article_id):
+     """Update an existing article."""
     article = get_object_or_404(Article, id=article_id)
 
     if request.user != article.author and request.user.role != "editor":
@@ -270,6 +271,8 @@ def update_article(request, article_id):
 # =========================
 @login_required
 def delete_article(request, article_id):
+     """Delete an article."""
+    
     article = get_object_or_404(Article, id=article_id)
 
     if request.user != article.author and request.user.role != "editor":
@@ -506,6 +509,7 @@ def journalist_profile(request):
 @login_required
 @user_passes_test(is_reader)
 def manage_subscriptions(request):
+     """Manage user subscriptions."""
     publishers = Publisher.objects.all()
     journalists = CustomUser.objects.filter(role="journalist")
 
@@ -577,6 +581,7 @@ def logout_user(request):
 # API VIEW
 # =========================
 class ArticleAPIView(APIView):
+     """API view for listing approved articles."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
