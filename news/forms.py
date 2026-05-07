@@ -5,6 +5,7 @@ from .models import Article, CustomUser, Newsletter, Publisher
 
 
 class RegisterForm(UserCreationForm):
+     """Form for registering new users."""
     email = forms.EmailField(required=True)
 
     class Meta:
@@ -19,6 +20,7 @@ class RegisterForm(UserCreationForm):
 
 
 class ArticleForm(forms.ModelForm):
+    """Form for creating and updating articles."""
     class Meta:
         model = Article
         fields = [
@@ -29,6 +31,7 @@ class ArticleForm(forms.ModelForm):
 
 
 class NewsletterForm(forms.ModelForm):
+     """Form for creating and updating newsletters."""
     publisher = forms.ModelChoiceField(
         queryset=Publisher.objects.all(),
         empty_label="Independent",
