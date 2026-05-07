@@ -16,7 +16,8 @@ ROLE_CHOICES = [
 # CUSTOM USER MODEL
 # =========================
 class CustomUser(AbstractUser):
-     """Custom user model with role support."""
+    """Custom user model with role support."""
+     
     role = models.CharField(
         max_length=20,
         choices=ROLE_CHOICES,
@@ -63,7 +64,8 @@ class CustomUser(AbstractUser):
 # PUBLISHER MODEL
 # =========================
 class Publisher(models.Model):
-     """Model representing a news article."""
+    """Model representing a news article."""
+     
     name = models.CharField(max_length=100)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -110,7 +112,7 @@ class Article(models.Model):
 # NEWSLETTER MODEL
 # =========================
 class Newsletter(models.Model):
-     """Model representing a newsletter post."""
+    """Model representing a newsletter post."""
      
     title = models.CharField(max_length=255)
     content = models.TextField()
