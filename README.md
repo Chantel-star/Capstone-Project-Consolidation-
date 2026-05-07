@@ -14,7 +14,7 @@ This is a Django news application where users can register and interact with the
 
 ## User Roles
 
-### Reader
+### 
 - Can register and log in
 - Can view approved articles
 - Can subscribe to publishers and journalists
@@ -47,49 +47,53 @@ git clone https://github.com/Chantel-star/news_capstone.git
 cd news_capstone
 
 3.Create a virtual environment
+## Virtual Environment Setup
+
+Create a virtual environment:
+
+```bash
 python -m venv venv
+```
 
-4. Activate the virtual environment
-Windows
+Activate the virtual environment:
+
+```bash
 venv\Scripts\activate
-macOS/Linux
-source venv/bin/activate
+```
 
-5. Install dependencies
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
+```
 
-6. Create the MariaDB/MySQL database
-Log into MySQL:
-mysql -u root -p
-CREATE DATABASE news_db;
-EXIT;
+Run migrations:
 
-7.DATABASES = {
-    "default": { 
-        "ENGINE": "django.db.backends.mysql", 
-        "NAME": "news_db",  
-        "USER": "news_user", 
-        "PASSWORD": "password123", 
-        "HOST": "localhost",   
-        "PORT": "3306",   
-       
-
-8. Run migrations
-python manage.py makemigrations
+```bash
 python manage.py migrate
+```
 
-9. Create a superuser
-python manage.py createsuperuser
+Run the server:
 
-10. Start the development server
+```bash
 python manage.py runserver
+```
 
-11. Open the application
+## Docker Setup
 
-Go to:
+Build the Docker image:
 
-http://127.0.0.1:8000/
+```bash
+docker build -t news-capstone-app .
+```
 
-Run tests with:
+Run the Docker container:
 
-python manage.py test
+```bash
+docker run -p 8000:8000 news-capstone-app
+```
+
+## Documentation
+
+Sphinx documentation is included in the `docs` folder.
+
