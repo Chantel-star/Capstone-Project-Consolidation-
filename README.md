@@ -172,21 +172,15 @@ http://127.0.0.1:8000/
 
 ---
 
-# Docker Setup
+## Docker Setup
 
-## Build the Docker image
+This project uses SQLite3 for easier Docker setup.
 
-```bash
-docker build -t news-capstone-app .
-```
-
-## Run the Docker container
+### 1. Build the Docker image
 
 ```bash
-docker run -p 8000:8000 news-capstone-app
-```
+docker build -t news-app .
 
----
 
 # Documentation
 
